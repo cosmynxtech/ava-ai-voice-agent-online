@@ -33,21 +33,34 @@ const WizardSimplified = () => {
 
         try {
             setLoading(true);
-            // Simple validation - check key format
-            if (provider === 'deepgram' && !key.startsWith('')) {
-                toast.error('Invalid Deepgram key format');
-                return;
-            }
-            toast.success(`${provider} key is valid!`);
 
-            // Update validation state
-            if (provider === 'Deepgram') {
-                setValidatedKeys({ ...validatedKeys, deepgram: true });
-            } else if (['Google', 'OpenAI', 'Mistral'].includes(provider)) {
-                setValidatedKeys({ ...validatedKeys, llm: true });
+            // Make actual API call to validate the key
+            const response = await axios.post('/api/config/providers/test', {
+                name: provider.toLowerCase(),
+                config: {
+                    api_key: key,
+                    ...(provider === 'Google' && { type: 'google', llm_model: 'gemini-1.5-flash' }),
+                    ...(provider === 'OpenAI' && { type: 'openai', chat_base_url: 'https://api.openai.com/v1' }),
+                    ...(provider === 'Mistral' && { type: 'openai', chat_base_url: 'https://api.mistral.ai/v1' }),
+                    ...(provider === 'Deepgram' && { type: 'deepgram', model: 'nova-2' }),
+                }
+            });
+
+            if (response.data?.success) {
+                toast.success(`${provider} key is valid!`);
+
+                // Update validation state
+                if (provider === 'Deepgram') {
+                    setValidatedKeys({ ...validatedKeys, deepgram: true });
+                } else if (['Google', 'OpenAI', 'Mistral'].includes(provider)) {
+                    setValidatedKeys({ ...validatedKeys, llm: true });
+                }
+            } else {
+                toast.error(response.data?.message || `${provider} key validation failed`);
             }
-        } catch (err) {
-            toast.error(`Failed to validate ${provider} key`);
+        } catch (err: any) {
+            const errorMsg = err.response?.data?.message || err.message || `Failed to validate ${provider} key`;
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
