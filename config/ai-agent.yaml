@@ -486,31 +486,19 @@ contexts:
       - request_transcript
   demo_hybrid:
     greeting: >-
-      Hi, I'm Ava running on a fully local AI setup with Qwen 3 on Metal GPU.
+      Hi, I'm Ava using Google Gemini Live for fast, multilingual conversations.
       How can I help you?
     profile: telephony_responsive
-    provider: local_hybrid
+    provider: google_live
     prompt: >
-      You are Ava, a helpful voice assistant running on a fully local AI setup.
-      CRITICAL: Never use think tags. Never output <think> or </think>. Respond directly without any internal reasoning tags. /no_think
+      You are Ava, a helpful voice assistant using Google Gemini Live AI.
+      Be concise, friendly, and helpful in your responses.
 
-
-      ABOUT THIS SETUP:
-
-      - You are powered by Qwen3-8B running natively on Apple Silicon M2 Max with Metal GPU acceleration
-
-      - Speech recognition (STT) and text-to-speech (TTS) run locally in Docker containers
-
-      - The LLM runs natively on macOS using MLX framework for maximum performance
-
-      - Zero cloud dependency for inference - all AI processing happens on-premises
-
-
-      ABOUT ASTERISK AI VOICE AGENT v6.2.0:
+      ABOUT ASTERISK AI VOICE AGENT (Online-Only Variant):
 
       - Open-source (MIT), production-ready AI voice agent framework for Asterisk and FreePBX
 
-      - Adds real-time, two-way natural voice conversations to your existing PBX system. A PBX is a private phone system used by businesses to manage internal and external calls.
+      - Adds real-time, two-way natural voice conversations to your existing PBX system.
 
       - No external telephony providers needed - works with your existing Asterisk or FreePBX installation
 
@@ -1214,54 +1202,13 @@ llm:
   initial_greeting: Hello, how can I help you today?
   prompt: Voice assistant. Answer in 5-8 words. Be direct. Expand only if asked.
 pipelines:
-  local_hybrid:
-    llm: native_llm
-    options:
-      llm:
-        base_url: http://host.docker.internal:8080/v1
-        max_tokens: 200
-        model: mlx-community/Qwen3-8B-4bit
-        temperature: 0.7
-        extra_body:
-          chat_template_kwargs:
-            enable_thinking: false
-      stt:
-        ws_url: ${LOCAL_WS_URL:-ws://127.0.0.1:8765}
-        chunk_ms: 160
-        mode: stt
-        stream_format: pcm16_16k
-        streaming: true
-      tts:
-        ws_url: ${LOCAL_WS_URL:-ws://127.0.0.1:8765}
-        mode: tts
-        response_timeout_sec: 30
-        format:
-          encoding: mulaw
-          sample_rate: 8000
-    stt: local_stt
-    tools: null
-    tts: local_tts
-  local_hybrid_groq:
-    llm: groq_llm
-    options:
-      llm:
-        base_url: https://api.groq.com/openai/v1
-        max_tokens: 200
-        model: llama-3.3-70b-versatile
-        temperature: 0.7
-      stt:
-        chunk_ms: 160
-        mode: stt
-        stream_format: pcm16_16k
-        streaming: true
-      tts:
-        mode: tts
-        response_timeout_sec: 30
-        format:
-          encoding: mulaw
-          sample_rate: 8000
-    stt: local_stt
-    tts: local_tts
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ONLINE-ONLY PIPELINES
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Local pipelines have been removed in this online-only variant.
+  # Use cloud providers instead: google_live, deepgram, openai_realtime, etc.
+  # ═══════════════════════════════════════════════════════════════════════════
+
   # Local STT + OpenAI LLM + ElevenLabs TTS (premium voice quality)
   # Requires: ELEVENLABS_API_KEY + OPENAI_API_KEY in .env
   hybrid_elevenlabs:
