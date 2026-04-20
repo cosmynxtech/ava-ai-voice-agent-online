@@ -162,6 +162,7 @@ const WizardSimplified = () => {
                             >
                                 <option value="google_live">Google Gemini Live (Recommended)</option>
                                 <option value="openai_realtime">OpenAI Realtime</option>
+                                <option value="mistral">Mistral AI</option>
                             </select>
                         </div>
 
@@ -223,6 +224,37 @@ const WizardSimplified = () => {
                                 </div>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
                                     Get your key from <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a>
+                                </p>
+                            </div>
+                        )}
+
+                        {/* LLM API Key - Mistral */}
+                        {config.llm_provider === 'mistral' && (
+                            <div className="space-y-3">
+                                <label className="block text-sm font-semibold text-slate-900 dark:text-white">
+                                    Mistral API Key <span className="text-red-500">*</span>
+                                </label>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                    For Mistral AI model
+                                </p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="password"
+                                        className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                                        value={config.mistral_key}
+                                        onChange={e => setConfig({ ...config, mistral_key: e.target.value })}
+                                        placeholder="Enter your Mistral API key"
+                                    />
+                                    <button
+                                        onClick={() => handleTestKey('Mistral', config.mistral_key)}
+                                        disabled={loading || !config.mistral_key}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium"
+                                    >
+                                        Test
+                                    </button>
+                                </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Get your key from <a href="https://console.mistral.ai" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.mistral.ai</a>
                                 </p>
                             </div>
                         )}
