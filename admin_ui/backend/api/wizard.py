@@ -2927,6 +2927,7 @@ class SetupConfig(BaseModel):
     groq_key: Optional[str] = None
     deepgram_key: Optional[str] = None
     google_key: Optional[str] = None
+    mistral_key: Optional[str] = None
     elevenlabs_key: Optional[str] = None
     elevenlabs_agent_id: Optional[str] = None
     cartesia_key: Optional[str] = None
@@ -2966,6 +2967,8 @@ async def save_setup_config(config: SetupConfig):
             raise HTTPException(status_code=400, detail="OpenAI API Key is required for Deepgram Think stage")
     if config.provider == "google_live" and not config.google_key:
             raise HTTPException(status_code=400, detail="Google API Key is required for Google Live provider")
+    if config.provider == "mistral_ai" and not config.mistral_key:
+            raise HTTPException(status_code=400, detail="Mistral API Key is required for Mistral AI provider")
     # Local hybrid uses a cloud LLM (Groq/OpenAI) or Ollama
     if config.provider == "local_hybrid":
         llm_provider = (config.hybrid_llm_provider or "groq").lower()
@@ -3020,6 +3023,8 @@ async def save_setup_config(config: SetupConfig):
             env_updates["DEEPGRAM_API_KEY"] = config.deepgram_key
         if config.google_key:
             env_updates["GOOGLE_API_KEY"] = config.google_key
+        if config.mistral_key:
+            env_updates["MISTRAL_API_KEY"] = config.mistral_key
         if config.elevenlabs_key:
             env_updates["ELEVENLABS_API_KEY"] = config.elevenlabs_key
         if config.elevenlabs_agent_id:

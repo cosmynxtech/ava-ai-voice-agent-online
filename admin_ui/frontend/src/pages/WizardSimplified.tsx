@@ -67,36 +67,36 @@ const WizardSimplified = () => {
         try {
             setLoading(true);
 
-            // Save to .env
-            const envData = {
-                DEEPGRAM_API_KEY: config.deepgram_key,
-                GOOGLE_API_KEY: config.llm_provider === 'google_live' ? config.google_key : '',
-                OPENAI_API_KEY: config.llm_provider === 'openai_realtime' ? config.openai_key : '',
-                ASTERISK_HOST: config.asterisk_host,
-                ASTERISK_ARI_USERNAME: config.asterisk_username,
-                ASTERISK_ARI_PASSWORD: config.asterisk_password,
+            // Send to /api/wizard/save endpoint
+            const setupData = {
+                provider: config.llm_provider,
+                asterisk_host: config.asterisk_host,
+                asterisk_username: config.asterisk_username,
+                asterisk_password: config.asterisk_password,
+                asterisk_port: config.asterisk_port,
+                asterisk_scheme: 'http',
+                asterisk_app: 'asterisk-ai-voice-agent',
+                asterisk_ssl_verify: false,
+                deepgram_key: config.deepgram_key,
+                google_key: config.llm_provider === 'google_live' ? config.google_key : undefined,
+                openai_key: config.llm_provider === 'openai_realtime' ? config.openai_key : undefined,
+                mistral_key: config.llm_provider === 'mistral_ai' ? config.mistral_key : undefined,
+                greeting: 'Hello! How can I help you today?',
+                ai_name: 'AVA',
+                ai_role: 'Customer Service Agent',
             };
 
-            await axios.post('/api/config/save-env', envData);
+            const response = await axios.post('/api/wizard/save', setupData);
 
-            // Update AI config with selected LLM
-            const aiConfig = {
-                default_provider: 'deepgram',
-                pipelines: {
-                    deepgram_llm: {
-                        stt: 'deepgram_stt',
-                        llm: config.llm_provider === 'google_live' ? 'google_llm' : 'openai_llm',
-                        tts: 'deepgram_tts',
-                    }
-                }
-            };
-
-            await axios.post('/api/config/save', aiConfig);
-
-            toast.success('Configuration saved!');
-            setStep(3);
-        } catch (err) {
-            toast.error('Failed to save configuration');
+            if (response.data && response.status === 200) {
+                toast.success('Configuration saved!');
+                setStep(3);
+            } else {
+                toast.error('Failed to save configuration');
+            }
+        } catch (err: any) {
+            const errorMsg = err.response?.data?.detail || 'Failed to save configuration';
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
