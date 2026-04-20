@@ -8,6 +8,10 @@ const WizardSimplified = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [validatedKeys, setValidatedKeys] = useState({
+        deepgram: false,
+        llm: false,
+    });
 
     const [config, setConfig] = useState({
         deepgram_key: '',
@@ -30,11 +34,18 @@ const WizardSimplified = () => {
         try {
             setLoading(true);
             // Simple validation - check key format
-            if (provider === 'deepgram' && !key.startsWith('') ) {
+            if (provider === 'deepgram' && !key.startsWith('')) {
                 toast.error('Invalid Deepgram key format');
                 return;
             }
             toast.success(`${provider} key is valid!`);
+
+            // Update validation state
+            if (provider === 'Deepgram') {
+                setValidatedKeys({ ...validatedKeys, deepgram: true });
+            } else if (['Google', 'OpenAI', 'Mistral'].includes(provider)) {
+                setValidatedKeys({ ...validatedKeys, llm: true });
+            }
         } catch (err) {
             toast.error(`Failed to validate ${provider} key`);
         } finally {
@@ -134,9 +145,15 @@ const WizardSimplified = () => {
                                     type="password"
                                     className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                     value={config.deepgram_key}
-                                    onChange={e => setConfig({ ...config, deepgram_key: e.target.value })}
+                                    onChange={e => {
+                                        setConfig({ ...config, deepgram_key: e.target.value });
+                                        setValidatedKeys({ ...validatedKeys, deepgram: false });
+                                    }}
                                     placeholder="Enter your Deepgram API key"
                                 />
+                                {validatedKeys.deepgram && (
+                                    <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                                )}
                                 <button
                                     onClick={() => handleTestKey('Deepgram', config.deepgram_key)}
                                     disabled={loading || !config.deepgram_key}
@@ -158,10 +175,14 @@ const WizardSimplified = () => {
                             <select
                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                 value={config.llm_provider}
-                                onChange={e => setConfig({ ...config, llm_provider: e.target.value })}
+                                onChange={e => {
+                                    setConfig({ ...config, llm_provider: e.target.value });
+                                    setValidatedKeys({ ...validatedKeys, llm: false });
+                                }}
                             >
-                                <option value="google_live">Google Gemini Live (Recommended)</option>
+                                <option value="google_live">Google Gemini (Recommended)</option>
                                 <option value="openai_realtime">OpenAI Realtime</option>
+                                <option value="mistral_ai">Mistral AI</option>
                             </select>
                         </div>
 
@@ -172,16 +193,22 @@ const WizardSimplified = () => {
                                     Google API Key <span className="text-red-500">*</span>
                                 </label>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                                    For Gemini Live AI model
+                                    For Gemini LLM model
                                 </p>
                                 <div className="flex gap-2">
                                     <input
                                         type="password"
                                         className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                         value={config.google_key}
-                                        onChange={e => setConfig({ ...config, google_key: e.target.value })}
+                                        onChange={e => {
+                                            setConfig({ ...config, google_key: e.target.value });
+                                            setValidatedKeys({ ...validatedKeys, llm: false });
+                                        }}
                                         placeholder="Enter your Google API key"
                                     />
+                                    {validatedKeys.llm && (
+                                        <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                                    )}
                                     <button
                                         onClick={() => handleTestKey('Google', config.google_key)}
                                         disabled={loading || !config.google_key}
@@ -210,9 +237,15 @@ const WizardSimplified = () => {
                                         type="password"
                                         className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                         value={config.openai_key}
-                                        onChange={e => setConfig({ ...config, openai_key: e.target.value })}
+                                        onChange={e => {
+                                            setConfig({ ...config, openai_key: e.target.value });
+                                            setValidatedKeys({ ...validatedKeys, llm: false });
+                                        }}
                                         placeholder="sk-..."
                                     />
+                                    {validatedKeys.llm && (
+                                        <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                                    )}
                                     <button
                                         onClick={() => handleTestKey('OpenAI', config.openai_key)}
                                         disabled={loading || !config.openai_key}
@@ -227,11 +260,49 @@ const WizardSimplified = () => {
                             </div>
                         )}
 
+                        {/* LLM API Key - Mistral */}
+                        {config.llm_provider === 'mistral_ai' && (
+                            <div className="space-y-3">
+                                <label className="block text-sm font-semibold text-slate-900 dark:text-white">
+                                    Mistral API Key <span className="text-red-500">*</span>
+                                </label>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                    For Mistral AI model
+                                </p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="password"
+                                        className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                                        value={config.mistral_key}
+                                        onChange={e => {
+                                            setConfig({ ...config, mistral_key: e.target.value });
+                                            setValidatedKeys({ ...validatedKeys, llm: false });
+                                        }}
+                                        placeholder="Enter your Mistral API key"
+                                    />
+                                    {validatedKeys.llm && (
+                                        <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                                    )}
+                                    <button
+                                        onClick={() => handleTestKey('Mistral', config.mistral_key)}
+                                        disabled={loading || !config.mistral_key}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium"
+                                    >
+                                        Test
+                                    </button>
+                                </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Get your key from <a href="https://console.mistral.ai" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.mistral.ai</a>
+                                </p>
+                            </div>
+                        )}
+
                         {/* Next Button */}
                         <div className="flex gap-3 pt-4">
                             <button
                                 onClick={() => setStep(2)}
-                                className="ml-auto px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-semibold hover:bg-slate-800 dark:hover:bg-slate-100"
+                                disabled={loading || !validatedKeys.deepgram || !validatedKeys.llm}
+                                className="ml-auto px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 Next →
                             </button>
