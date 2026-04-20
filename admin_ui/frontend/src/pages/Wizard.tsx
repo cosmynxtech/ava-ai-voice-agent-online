@@ -129,8 +129,6 @@ const Wizard = () => {
             'google_live',
             'openai_realtime',
             'deepgram',
-            'local_hybrid',
-            'local',
             'elevenlabs_agent',
         ]);
         return supported.has(provider) ? provider : 'openai_realtime';
@@ -1200,18 +1198,6 @@ exten => s,1,NoOp(AI Agent Call)
                                 title="Deepgram Voice Agent"
                                 description="Enterprise-grade with 'Think' stage. Best for complex queries and high reliability."
                                 icon={Server}
-                            />
-                            <ProviderCard
-                                id="local_hybrid"
-                                title="Local Hybrid"
-                                description="Privacy-focused. Audio stays local (STT/TTS), only text is sent to cloud LLM."
-                                icon={Shield}
-                            />
-                            <ProviderCard
-                                id="local"
-                                title="Local (Full)"
-                                description="100% on-premises. All processing stays local - STT, LLM, and TTS. No API keys required."
-                                icon={HardDrive}
                             />
                             <ProviderCard
                                 id="elevenlabs_agent"
