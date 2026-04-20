@@ -11,7 +11,7 @@ const WizardSimplified = () => {
 
     const [config, setConfig] = useState({
         deepgram_key: '',
-        llm_provider: 'google_live',
+        llm_provider: 'google',
         openai_key: '',
         google_key: '',
         mistral_key: '',
@@ -160,20 +160,20 @@ const WizardSimplified = () => {
                                 value={config.llm_provider}
                                 onChange={e => setConfig({ ...config, llm_provider: e.target.value })}
                             >
-                                <option value="google_live">Google Gemini Live (Recommended)</option>
-                                <option value="openai_realtime">OpenAI Realtime</option>
+                                <option value="google">Google Gemini (Recommended)</option>
+                                <option value="openai">OpenAI GPT-4</option>
                                 <option value="mistral">Mistral AI</option>
                             </select>
                         </div>
 
                         {/* LLM API Key - Google */}
-                        {config.llm_provider === 'google_live' && (
+                        {config.llm_provider === 'google' && (
                             <div className="space-y-3">
                                 <label className="block text-sm font-semibold text-slate-900 dark:text-white">
                                     Google API Key <span className="text-red-500">*</span>
                                 </label>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                                    For Gemini Live AI model
+                                    For Google Gemini LLM
                                 </p>
                                 <div className="flex gap-2">
                                     <input
@@ -198,13 +198,13 @@ const WizardSimplified = () => {
                         )}
 
                         {/* LLM API Key - OpenAI */}
-                        {config.llm_provider === 'openai_realtime' && (
+                        {config.llm_provider === 'openai' && (
                             <div className="space-y-3">
                                 <label className="block text-sm font-semibold text-slate-900 dark:text-white">
                                     OpenAI API Key <span className="text-red-500">*</span>
                                 </label>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                                    For GPT-4 Realtime model
+                                    For GPT-4 LLM model
                                 </p>
                                 <div className="flex gap-2">
                                     <input
