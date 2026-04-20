@@ -34,20 +34,24 @@ const WizardSimplified = () => {
         try {
             setLoading(true);
 
-            // Make actual API call to validate the key
-            const response = await axios.post('/api/config/providers/test', {
-                name: provider.toLowerCase(),
-                config: {
-                    api_key: key,
-                    ...(provider === 'Google' && { type: 'google', llm_model: 'gemini-1.5-flash' }),
-                    ...(provider === 'OpenAI' && { type: 'openai', chat_base_url: 'https://api.openai.com/v1' }),
-                    ...(provider === 'Mistral' && { type: 'openai', chat_base_url: 'https://api.mistral.ai/v1' }),
-                    ...(provider === 'Deepgram' && { type: 'deepgram', model: 'nova-2' }),
-                }
+            // Map provider names to backend provider names
+            const providerMap: { [key: string]: string } = {
+                'Deepgram': 'deepgram',
+                'Google': 'google',
+                'OpenAI': 'openai',
+                'Mistral': 'mistral',
+            };
+
+            const backendProvider = providerMap[provider] || provider.toLowerCase();
+
+            // Call /api/wizard/validate-key endpoint
+            const response = await axios.post('/api/wizard/validate-key', {
+                provider: backendProvider,
+                api_key: key.trim(),
             });
 
-            if (response.data?.success) {
-                toast.success(`${provider} key is valid!`);
+            if (response.data?.valid) {
+                toast.success(response.data?.message || `${provider} key is valid!`);
 
                 // Update validation state
                 if (provider === 'Deepgram') {
@@ -56,10 +60,11 @@ const WizardSimplified = () => {
                     setValidatedKeys({ ...validatedKeys, llm: true });
                 }
             } else {
-                toast.error(response.data?.message || `${provider} key validation failed`);
+                const errorMsg = response.data?.error || `${provider} key validation failed`;
+                toast.error(errorMsg);
             }
         } catch (err: any) {
-            const errorMsg = err.response?.data?.message || err.message || `Failed to validate ${provider} key`;
+            const errorMsg = err.response?.data?.error || err.message || `Failed to validate ${provider} key`;
             toast.error(errorMsg);
         } finally {
             setLoading(false);

@@ -2913,6 +2913,11 @@ async def get_setup_status():
     except Exception as e:
         return {"configured": False, "message": str(e)}
 
+class ApiKeyValidation(BaseModel):
+    provider: str
+    api_key: str
+    agent_id: Optional[str] = None
+
 class SetupConfig(BaseModel):
     provider: str = "openai_realtime"
     asterisk_host: str
@@ -2953,6 +2958,76 @@ class SetupConfig(BaseModel):
     local_llm_custom_filename: Optional[str] = None
 
 # ... (keep existing endpoints) ...
+
+@router.post("/validate-key")
+async def validate_api_key(validation: ApiKeyValidation):
+    """Validate an API key by testing it against the provider's API"""
+    try:
+        provider = validation.provider.lower()
+        api_key = validation.api_key.strip() if validation.api_key else ""
+
+        if not api_key:
+            return {"valid": False, "error": "API key is empty"}
+
+        async with httpx.AsyncClient() as client:
+            if provider == "openai":
+                response = await client.get(
+                    "https://api.openai.com/v1/models",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    return {"valid": True, "message": "OpenAI API key is valid"}
+                elif response.status_code == 401:
+                    return {"valid": False, "error": "Invalid API key"}
+                else:
+                    return {"valid": False, "error": f"API error: HTTP {response.status_code}"}
+
+            elif provider == "deepgram":
+                response = await client.get(
+                    "https://api.deepgram.com/v1/projects",
+                    headers={"Authorization": f"Token {api_key}"},
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    return {"valid": True, "message": "Deepgram API key is valid"}
+                elif response.status_code == 401:
+                    return {"valid": False, "error": "Invalid API key"}
+                else:
+                    return {"valid": False, "error": f"API error: HTTP {response.status_code}"}
+
+            elif provider == "google":
+                response = await client.get(
+                    GOOGLE_MODELS_URL,
+                    params={"key": api_key},
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    return {"valid": True, "message": "Google API key is valid"}
+                elif response.status_code in [400, 403]:
+                    return {"valid": False, "error": "Invalid API key"}
+                else:
+                    return {"valid": False, "error": f"API error: HTTP {response.status_code}"}
+
+            elif provider == "mistral":
+                response = await client.get(
+                    "https://api.mistral.ai/v1/models",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    return {"valid": True, "message": "Mistral API key is valid"}
+                elif response.status_code == 401:
+                    return {"valid": False, "error": "Invalid API key"}
+                else:
+                    return {"valid": False, "error": f"API error: HTTP {response.status_code}"}
+
+            else:
+                return {"valid": False, "error": f"Unknown provider: {provider}"}
+
+    except Exception as e:
+        logger.error(f"Error validating API key: {str(e)}", exc_info=True)
+        return {"valid": False, "error": f"Connection error: {str(e)}"}
 
 @router.post("/save")
 async def save_setup_config(config: SetupConfig):
