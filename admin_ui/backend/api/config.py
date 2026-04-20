@@ -1168,6 +1168,25 @@ async def test_provider_connection(request: ProviderTestRequest):
                 return {"success": False, "message": f"OpenAI API error: HTTP {response.status_code}"}
 
         # ============================================================
+        # MISTRAL AI
+        # ============================================================
+        if 'mistral' in provider_name.lower() or provider_config.get('type') == 'mistral':
+            api_key = provider_config.get('api_key') or get_env_key('MISTRAL_API_KEY')
+            if not api_key:
+                return {"success": False, "message": "MISTRAL_API_KEY not set in .env file"}
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://api.mistral.ai/v1/models",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    return {"success": True, "message": f"Connected to Mistral AI (HTTP {response.status_code})"}
+                if response.status_code == 401:
+                    return {"success": False, "message": "Invalid Mistral API key (401 Unauthorized)"}
+                return {"success": False, "message": f"Mistral API error: HTTP {response.status_code}"}
+
+        # ============================================================
         # TELNYX (OpenAI-compatible) - validate /models + a tiny /chat/completions
         # ============================================================
         provider_type = str(provider_config.get('type') or '').lower()
@@ -1320,7 +1339,7 @@ async def test_provider_connection(request: ProviderTestRequest):
                 
         elif 'google_live' in provider_config or ('llm_model' in provider_config and 'gemini' in provider_config.get('llm_model', '')):
             # Google Live
-            api_key = get_env_key('GOOGLE_API_KEY')
+            api_key = provider_config.get('api_key') or get_env_key('GOOGLE_API_KEY')
             if not api_key:
                 return {"success": False, "message": "GOOGLE_API_KEY not set in .env file"}
             async with httpx.AsyncClient() as client:
@@ -1330,6 +1349,8 @@ async def test_provider_connection(request: ProviderTestRequest):
                 )
                 if response.status_code == 200:
                     return {"success": True, "message": f"Connected to Google API (HTTP {response.status_code})"}
+                if response.status_code == 400 or response.status_code == 401:
+                    return {"success": False, "message": "Invalid Google API key (401 Unauthorized)"}
                 return {"success": False, "message": f"Google API error: HTTP {response.status_code}"}
                 
         elif 'ws_url' in provider_config:
@@ -1379,7 +1400,7 @@ async def test_provider_connection(request: ProviderTestRequest):
             # Deepgram often has 'deepgram' in name or model names like 'nova'
             if provider_config.get('model', '').startswith('nova') or 'deepgram' in provider_name.lower():
                 # Deepgram
-                api_key = get_env_key('DEEPGRAM_API_KEY')
+                api_key = provider_config.get('api_key') or get_env_key('DEEPGRAM_API_KEY')
                 if not api_key:
                     return {"success": False, "message": "DEEPGRAM_API_KEY not set in .env file"}
                 async with httpx.AsyncClient() as client:
@@ -1390,11 +1411,13 @@ async def test_provider_connection(request: ProviderTestRequest):
                     )
                     if response.status_code == 200:
                         return {"success": True, "message": f"Connected to Deepgram (HTTP {response.status_code})"}
+                    if response.status_code == 401:
+                        return {"success": False, "message": "Invalid Deepgram API key (401 Unauthorized)"}
                     return {"success": False, "message": f"Deepgram API error: HTTP {response.status_code}"}
             else:
                 # OpenAI Standard or Generic
                 # Try OpenAI first
-                api_key = get_env_key('OPENAI_API_KEY')
+                api_key = provider_config.get('api_key') or get_env_key('OPENAI_API_KEY')
                 if api_key:
                    async with httpx.AsyncClient() as client:
                         try:
@@ -1405,11 +1428,13 @@ async def test_provider_connection(request: ProviderTestRequest):
                             )
                             if response.status_code == 200:
                                 return {"success": True, "message": f"Connected to OpenAI (HTTP {response.status_code})"}
+                            if response.status_code == 401:
+                                return {"success": False, "message": "Invalid OpenAI API key (401 Unauthorized)"}
                         except:
                             pass
-                
+
                 # If we are here, it might be a local provider using 'model' key (e.g. local_tts)
-                # but without ws_url? Usually local providers have ws_url. 
+                # but without ws_url? Usually local providers have ws_url.
                 # If it's pure local without WS (e.g. wrapper), assume success if file paths exist?
                 return {"success": True, "message": "Provider configuration valid (No specific connection test available)"}
         
